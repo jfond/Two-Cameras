@@ -1,0 +1,1 @@
+All credit for code in the "Core" folder goes to Ben Deverett who wrote the original pieces, which are found in the core folder in this Experimental Inferface Repository (https://github.com/bensondaled/exp_interface). The code found here includes my small changes to his original work.
