@@ -5,122 +5,89 @@ import cv2
 import cv2.cv as cv
 import numpy as np
 
-class sortProcess(object):
-	def __init__(self, fileStartLocation = None, fileTargetLocationRoot = None, trialNum=1, pgFilename='PG_Vid', ps3Filename = 'PS3_Vid',framePerVid = 765):
-		#Initialize variables
-		self.fileStartLocation = fileStartLocation
-		self.fileTargetLocationRoot = fileTargetLocationRoot
-		self.pgFilename = pgFilename #
-		self.ps3Filename = ps3Filename #Name of PS3 Videos 
-		self.pgSaveName = 'fc2_save' #Name of raw saved Point Grey Videos
-		self.sortingProcessPossible = True
-		self.framePerVid = framePerVid
-		self.trialNum = trialNum	 #This one should be static
-		self.sortNum = self.trialNum #This one can vary
-		print str(self.trialNum)
-		
-		print " " #Makes things look nicer
-		
-		#Verify that the directories given exist
-		if not os.path.isdir(self.fileStartLocation):
-			print ('->The File Start Location Supplied does not exist')
-			print ('  Please choose a valid File Start Location')
-			self.sortingProcessPossible = False
-		if not os.path.isdir(self.fileTargetLocationRoot+'%i'%self.trialNum):
-			self.trialNum -= 1
-			if not os.path.isdir(self.fileTargetLocationRoot+'%i'%self.trialNum):
-				print "->Could not find appropriate Trial folder to place sorted videos"
-				print "  Please choose a valid File Target Location"
-				self.sotringProcessPossible = False
+class Organizer(object):
+	FOURCC = cv2.cv.CV_FOURCC(*'XVID')
+	quitList = ['q', 'Q', 'quit', 'Quit']
+	
+	def __init__(self, File_Saving_Dict):
+		#Initialize Dictionary
+		self.File_Saving_Dict = File_Saving_Dict
 
-		#Scan Point Grey folder for Point Grey video files
-		# thereAreNotPgVideos = True 
-		# dir = os.listdir(self.fileStartLocation)
-		# for file in dir:
-			# if file[:8] == "fc2_save":
-				# thereAreNotPgVideos = False
-				# break	
-		# if thereAreNotPgVideos:
-			# print ("->There are no Point Grey videos under the name '"+ self.pgSaveName+"'")
-			# self.sortingProcessPossible = False
-		# #Check PS3 folder for ps3 files
-		# if not os.path.isfile(os.path.join(self.fileTargetLocation,ps3Filename+"1.avi")):
-			# dirs = os.listdir(self.fileTargetLocation)
-			# #print(dirs[1])
-			# print('->There are no PS3 videos under the name '+ps3Filename)
-			# self.sortingProcessPossible = False
-					
+
 		print " " #Makes things look nicer
+			
+	def getLocation(self):
 		
-	def isPossible(self):
-		return self.sortingProcessPossible
-		
-	def sort(self, trialNum):
 		while True:
-			input = raw_input("Trial Number:")
-			input = input.rstrip()
+			input = extras.getUserInput("Date (DDMMYYYY):")
 			input = int(input)
-			print str(input)
+			if input in self.quitList:
+				return None			
 			if type(input) == int:
-				self.sortNum = input
-				print str(input)
-				break
+				File_Saving_Dict["Date"] = input
+				checkLocation = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"])
+				if (os.path.isdir(checkLocation) == False):
+					print "Error: Could not find Trial folder for sorting"
+					return None
+				else:
+					break
+			else:
+				print "Please enter a valid numerical date in the form 'DDMMYYYY'"
+		
+		while True:
+			input = extras.getUserInput("Trial Number:")
+			input = int(input)
+			if input in self.quitList:
+				return None				
+			if type(input) == int:
+				File_Saving_Dict["Trial_Number"] = input
+				checkLocation = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"], "Trial" + str(File_Saving_Dict["Trial_Number"]))
+				if (os.path.isdir(File_Saving_Dict["File_Complete_Target_Location"]) == False):
+					print "Error: Could not find Trial folder for sorting"
+					return None
+				else:
+					File_Saving_Dict["File_Complete_Target_Location"] = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"], "Trial%i"%File_Saving_Dict["Trial_Number"])
+					break
 			else:
 				print "Please enter a valid number"
-			if (os.path.isdir(self.fileTargetLocation) == False):
-				print "Error: Could not find Trial folder for sorting"
-				return None		
+
+	def getFrameCount(self):
 		
-		#Eventually check frames in the videos vs number of PS3 videos and compare
-		
-		# #Count the number of unpaired PS3 Videos
-		# dir = os.listdir(self.fileTargetLocation)
-		# file = None
-		numberofPS3Videos = 0
-		# for file in dir:
-			# if file[:7] == self.ps3Filename:
-				# numberofPS3Videos +=1
-		
-		
-		# #Count the number of raw Point Grey Videos
-		# dir = os.listdir(self.fileStartLocation)
-		numberofPGVideos = 0
-		# for file in dir:
-			# if file[:8] == "fc2_save":
-				# numberofPGVideos +=1
-			# else:
-				# dir.remove(file)	
-		
-		if (numberofPGVideos == numberofPS3Videos): #A weak check to try to ensure that we are pairing videos correctly
-			self.saveFiles()
-		else: 
-			print "->Number of Point Grey videos did not match number of PS3 Videos."
-			print "  Please remove unwanted videos and try again"
+		while True:
+			input = extras.getUserInput("Frames per Video:")
+			if input in self.quitList:
+				return None				
+			try:
+				File_Saving_Dict["Frames_In_Saved_Video"] = int(input)
+				break
+			except:
+				print "Please enter a valid number"
 				
 	def saveFiles(self):
-		dir = os.listdir(self.fileStartLocation)
+		#Find all desired PG videos
+		dir = os.listdir(self.File_Saving_Dict["File_PG_Initial_Save_Location"])
+		length = len(self.File_Saving_Dict["PG_Initial_SaveName"])
 		for file in dir:
-			if not file[:8] == "fc2_save":
+			if not (file[:length] == self.File_Saving_Dict["PG_Initial_SaveName"]):
 				dir.remove(file)
-		numMoviesTotal = len(dir) - 1
+		
+		numMoviesTotal = len(dir)
 		movieCounter = 0
 		file = dir[movieCounter]
 		
-		cap = cv2.VideoCapture(os.path.join(self.fileStartLocation,file))
-		fourcc = cv2.cv.CV_FOURCC(*'XVID')
+		cap = cv2.VideoCapture(os.path.join(File_Saving_Dict["File_PG_Initial_Save_Location"],file))
 		
 		width = int(cap.get(3))
 		height = int(cap.get(4))
 		numFramesInMovie = int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
 		fps = int(cap.get(cv.CV_CAP_PROP_FPS))
 		
-		vidNum = 1
-		vidNumStr = "%04d" % vidNum
-		
-		out = cv2.VideoWriter(os.path.join(self.fileTargetLocationRoot+'%i'%self.sortNum,self.pgFilename+vidNumStr+'.avi'),fourcc, fps, (width,height))
-		f, img = cap.read()
 		frameCounter = 1
+		vidNum = 1
 		
+		out = cv2.VideoWriter(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PG_Target_SaveName"]+'%i.avi'%vidNum),FOURCC, fps, (width,height))
+		f, img = cap.read()
+
 		while (True):
 			cv2.waitKey(1)
 			f, img = cap.read()
@@ -131,17 +98,85 @@ class sortProcess(object):
 				if not (movieCounter==numMoviesTotal):
 					movieCounter += 1
 					file = dir[movieCounter]
-					cap = cv2.VideoCapture(os.path.join(self.fileStartLocation,file))
+					cap = cv2.VideoCapture(os.path.join(File_Saving_Dict["File_PG_Initial_Save_Location"],file))
 					numFramesInMovie += int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
 				else:
 					break
-			if (frameCounter % self.framePerVid == 0):
+			if (frameCounter % self.File_Saving_Dict["Frames_In_Saved_Video"] == 0):
 				out.release()
 				vidNum +=1
-				vidNumStr = "%04d" % vidNum
-				out = cv2.VideoWriter(os.path.join(self.fileTargetLocationRoot+'%i'%self.sortNum,self.pgFilename+vidNumStr+'.avi'),fourcc, 120, (width,height))
+				out = cv2.VideoWriter(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PG_Target_SaveName"]+'%i.avi'%vidNum),FOURCC, fps, (width,height))
 						
 			frameCounter += 1
+			
+	def syncFiles(self):	
+			
+		dir = os.listdir(self.File_Saving_Dict["File_Complete_Target_Location"])
+		length = len(self.File_Saving_Dict["PS3_Target_SaveName"])
+		for file in dir:
+			if not (file[:length] == self.File_Saving_Dict["PS3_Target_SaveName"]):
+				dir.remove(file)		
+				
+		
+		for videoNum in enumerate(dir):
+			vidNum = videoNum[0] + 1
+			cap1 = cv2.VideoCapture(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PS3_Target_SaveName"]+'%i.avi'%vidNum))
+			cap2 = cv2.VideoCapture(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PG_Target_SaveName"]+'%i.avi'%vidNum))
+			width1 = int(cap1.get(3))
+			width2 = int(cap2.get(3))
+			height1 = int(cap1.get(4))
+			height2 = int(cap2.get(4))
+			frames_in_video1 = int(cap1.get(cv.CV_CAP_PROP_FRAME_COUNT))
+			frames_in_video2 = int(cap2.get(cv.CV_CAP_PROP_FRAME_COUNT))	
+			fps1 = int(cap1.get(cv.CV_CAP_PROP_FPS))
+			fps2 = int(cap2.get(cv.CV_CAP_PROP_FPS))
+			timeTotal = min(((frames_in_video1/fps1),(frames_in_video2/fps2)))				
+			fps = np.max((fps1,fps2))
+			framesTotal = timeTotal*fps
+			fps_ratio = (fps1/fps2)
+			slower_camera_index = 1 #Camera index is 0 or 1 where 0 is cap1 and 1 is cap2
+			if fps_ratio < 1:
+				fps_ratio = 1/fps_ratio
+				slower_camera_index = 0
+				faster_camera_index = 1
+			smaller_resolution_index = 0
+			if (width2*height2 < width1*height1):
+				smaller_resolution_index = 1
+			Height = max(height1,height2)
+			Width = (width1 + width2)	
 
-	
-	
+			camera1 = {"cap":cap1,"width":width1,"height":height1,"frames":frames_in_video1,"fps":fps1}
+			camera2 = {"cap":cap2,"width":width2,"height":height2,"frames":frames_in_video2,"fps":fps2}
+			camera_list = (camera1,camera2)
+               
+			out = cv2.VideoWriter(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],'Synchronized_Vid%i'%vidNum+'.avi'),FOURCC, fps, (Width,Height),0)			
+			image = np.ones((Height,Width))
+			
+			for n in range(framesTotal-2):
+				cv2.waitKey(1)
+							
+				if n%fps_ratio < 1:
+					if (slower_camera_index == smaller_resolution_index):
+						f1, img_small = camera_list[slower_camera_index]["cap"].read()
+						img_small = cv2.cvtColor(img_small, cv2.COLOR_BGR2GRAY)	
+					else: 
+						f1, img_large = camera_list[slower_camera_index]["cap"].read()
+						img_large = cv2.cvtColor(img_large, cv2.COLOR_BGR2GRAY)
+					
+				if (slower_camera_index == smaller_resolution_index):
+					f1, img_large = camera_list[(slower_camera_index+1)%2]["cap"].read()
+					img_large = cv2.cvtColor(img_large, cv2.COLOR_BGR2GRAY)
+				else: 
+					f1, img_small = camera_list[(slower_camera_index+1)%2]["cap"].read() 
+					img_small = cv2.cvtColor(img_small, cv2.COLOR_BGR2GRAY)	
+					
+				image[:camera_list[(smaller_resolution_index+1)%2]["height"], :camera_list[(smaller_resolution_index+1)%2]["width"]] = img_large
+				image[:camera_list[smaller_resolution_index]["height"], camera_list[(smaller_resolution_index+1)%2]["width"]:Width] = img_small
+				image = image.astype(np.uint8)
+				
+				out.write(image)
+			
+			cap1.release()
+			cap2.release()
+			out.release()
+			#cv2.destroyAllWindows()

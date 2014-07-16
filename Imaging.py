@@ -1,18 +1,15 @@
-import sys
-import winsound
-import numpy as np
 import cv2
 import os
 import extras
-from Organize import sortProcess
-from Recorder import record
-from core.cameras import CamSetup
 import time
-from Analysis import analyze
+import sys
+from core.cameras import CamSetup
+from Main_Loops import Menu_Loop
+from Main_Loops import Mouse_Loop
 
 #######################
 # THINGS TO DO:
-#1. Proper naming of the timestamp files: don't overlap with ps3 videos																						- DONE
+#1. Proper naming of the timestamp files: don't overlap with ps3 videos		- done																				- DONE
 #2. Get the sorting process functional                                                                                                                      - DONE
 #3. Implement Experimental Interface so that the video taking beings when the mouse begins to move
 #4. Implement a viewing software that will merge the two videos together properly
@@ -27,79 +24,53 @@ from Analysis import analyze
 
 
 print ('Initializing...')
-#Initialize Static Variables
-Freq = 80
-beepDur = 25 #Milliseconds
-fps = 75
-PS3_SaveName = 'PS3_Vid'
-resolution = (640,480)
-videoDur = 6.4 #seconds
-totalFrames = int(fps * videoDur)
-fourcc = cv2.cv.CV_FOURCC(*'XVID')
-movement_std_threshold = 100
-fileTargetLocationRoot = 'C:\\Users\\Camera\\Desktop\\Two Camera Imaging\\Data\Trial'
 
-#Acceptable entries for performing a certain command
-sortCommandList = ['s','S','Sort','sort']
-quitCommandList = ['q', 'Q', 'quit', 'Quit']
-runCommandList = ['run', 'go', 'record', 'g', 'G']
-viewCommandList = ['v', 'V', 'view', 'View']
-recordCommandList = ['r', 'R', 'record', 'Record', 'Record', 'autorecord']
-analyzeCommandList = ['a', 'A', 'analyze', 'Analyze', 'ANALYZE']
+#Constants
+Constants_Dict = {}
+Constants_Dict["Frequency"] = 80     
+Constants_Dict["Beep_Duration"] = 25 #Milliseconds
+
+#Imaging Parameters
+Imaging_Dict = {}
+Imaging_Dict["FPS"] = 120
+Imaging_Dict["PS3_Resolution"] = (320,240)
+Imaging_Dict["Video_Duration"] = 2.0 #seconds
+Imaging_Dict["Total_Frames"] = int(Imaging_Dict["FPS"] * Imaging_Dict["Video_Duration"])
+Imaging_Dict["Color_Mode"] = CamSetup.COLOR
+Imaging_Dict["Query_Frames"] = 10
+Imaging_Dict["Number_STD_Points_Displayed"] = 100
+Imaging_Dict["STD_Translation"] = 50
+Imaging_Dict["STD_Scale_Factor"] = 100
+Imaging_Dict["Movement_STD_Threshold"] = 110
+
+#File Saving Parameters
+File_Saving_Dict = {}
+File_Saving_Dict["Date"] =  time.strftime("%d%m%Y")
+File_Saving_Dict["PS3_Target_SaveName"] = 'PS3_Vid'
+File_Saving_Dict["PG_Target_SaveName"] = 'PG_Vid'
+File_Saving_Dict["PG_Initial_SaveName"] = 'fc2_save'
+File_Saving_Dict["File_Target_Location_Root"] = 'C:\Users\Camera\Desktop\GtHUb\Two-Cameras\Data' #Used when I need flexibility in manipulating directories
+File_Saving_Dict["File_PG_Initial_Save_Location"] = "C:\\tmp"
+File_Saving_Dict["Frames_In_Saved_Video"] = Imaging_Dict["Total_Frames"]
+
+File_Saving_Dict["Mouse_Name"] = Mouse_Loop(File_Saving_Dict["File_Target_Location_Root"])
+if File_Saving_Dict["Mouse_Name"] is None:
+	sys.exit(0)
 
 #Select first number available to name the video:
 trialNum,videoNum = 1,1 #counter variables
-while os.path.isdir(os.path.join('Data','Trial%s'%trialNum)):
+while os.path.isdir(os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"], "Trial%i"%trialNum)):
 	trialNum += 1
-fileTargetLocation = fileTargetLocationRoot+'%iWS'%trialNum
 #Prepare the system for recording...	
 
-Camera = CamSetup(idx=0,resolution=resolution,frame_rate=fps,color_mode=CamSetup.COLOR)
-sortingProcess = sortProcess(fileStartLocation = 'C:\\tmp',fileTargetLocationRoot = fileTargetLocationRoot,  pgFilename='PG_Vid', ps3Filename = 'PS3_Vid')
+File_Saving_Dict["Trial_Number"] = trialNum
+File_Saving_Dict["File_Complete_Target_Location"] = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"], "Trial%i"%File_Saving_Dict["Trial_Number"]) #Used when I want to be compact
 
-while True:
-	print "MENU:"
-	print "  Enter 'quit' to Quit"
-	print "  Enter 'go' to manually start recording one video (unstable)"
-	print "  Enter 'view' to view saved videos"
-	print "  Enter 'sort' to move and rename all Point Grey files to the Data folder"
-	print "  Enter 'record' to have the software automatically record mouse movement"
-	print "  Enter 'analyze' to begin analyzing the data"
+Camera = CamSetup(Imaging_Dict)
 
-	input = extras.getUserInput("Input:")
 
-	if (input in sortCommandList):
-		if sortingProcess.isPossible():
-			sortingProcess.sort(trialNum)
-		
-
-	elif (input in viewCommandList):
-		VideoSelect(name=savename)
+Menu_Loop(Imaging_Dict, File_Saving_Dict, Constants_Dict, Camera)
 	
-	elif (input in quitCommandList):
-		break
-	
-	elif (input in runCommandList):
-		if not Recording.currentlyRecording:
-			Recording.run()
-		else:
-			print "->Camera is currently recording"
-			print "  Please wait a moment to manually trigger it"
-			
-	elif (input in recordCommandList):
-		Recording = record(Camera = Camera, trialNum = trialNum, videoNum = videoNum, PS3_SaveName = PS3_SaveName, Freq = Freq, beepDur = beepDur, totalFrames = totalFrames, movement_std_threshold = movement_std_threshold, mask_name = 'WHEEL', resample = 1, movement_query_frames = 10, monitor_vals_display = 100, fileTargetLocation = 'C:\\Users\\Camera\\Desktop\\Two Camera Imaging\\Data\Trial1', sortingProcess = None)
-		Recording.autoRecord()
-		
-	elif (input in analyzeCommandList):
-		Analysis = analyze(Camera, fileTargetLocationRoot,PS3_SaveName )
-		Analysis.menu()
-  
-	else:
-		print "->Did not recognize user input."
-		print "  Please enter a valid command."
-		
-		
 Camera.release()
-cv2.destroyAllWindows()	
-	
-	
+cv2.destroyAllWindows()						
+			
