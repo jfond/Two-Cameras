@@ -24,8 +24,8 @@ class Organizer(object):
 			if input in self.quitList:
 				return None			
 			if type(input) == int:
-				File_Saving_Dict["Date"] = input
-				checkLocation = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"])
+				self.File_Saving_Dict["Date"] = str(input)
+				checkLocation = os.path.join(self.File_Saving_Dict["File_Target_Location_Root"],self.File_Saving_Dict["Mouse_Name"],self.File_Saving_Dict["Date"])
 				if (os.path.isdir(checkLocation) == False):
 					print "Error: Could not find Trial folder for sorting"
 					return None
@@ -40,13 +40,13 @@ class Organizer(object):
 			if input in self.quitList:
 				return None				
 			if type(input) == int:
-				File_Saving_Dict["Trial_Number"] = input
-				checkLocation = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"], "Trial" + str(File_Saving_Dict["Trial_Number"]))
-				if (os.path.isdir(File_Saving_Dict["File_Complete_Target_Location"]) == False):
+				self.File_Saving_Dict["Trial_Number"] = input
+				checkLocation = os.path.join(self.File_Saving_Dict["File_Target_Location_Root"],self.File_Saving_Dict["Mouse_Name"],self.File_Saving_Dict["Date"], "Trial%i"%self.File_Saving_Dict["Trial_Number"])
+				if (os.path.isdir(checkLocation) == False):
 					print "Error: Could not find Trial folder for sorting"
 					return None
 				else:
-					File_Saving_Dict["File_Complete_Target_Location"] = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"], "Trial%i"%File_Saving_Dict["Trial_Number"])
+					self.File_Saving_Dict["File_Complete_Target_Location"] = os.path.join(self.File_Saving_Dict["File_Target_Location_Root"],self.File_Saving_Dict["Mouse_Name"],self.File_Saving_Dict["Date"], "Trial%i"%self.File_Saving_Dict["Trial_Number"])
 					break
 			else:
 				print "Please enter a valid number"
@@ -58,7 +58,7 @@ class Organizer(object):
 			if input in self.quitList:
 				return None				
 			try:
-				File_Saving_Dict["Frames_In_Saved_Video"] = int(input)
+				self.File_Saving_Dict["Frames_In_Saved_Video"] = int(input)
 				break
 			except:
 				print "Please enter a valid number"
@@ -72,10 +72,10 @@ class Organizer(object):
 				dir.remove(file)
 		
 		numMoviesTotal = len(dir)
-		movieCounter = 0
-		file = dir[movieCounter]
+		movieCounter = 1
+		file = dir[movieCounter-1]
 		
-		cap = cv2.VideoCapture(os.path.join(File_Saving_Dict["File_PG_Initial_Save_Location"],file))
+		cap = cv2.VideoCapture(os.path.join(self.File_Saving_Dict["File_PG_Initial_Save_Location"],file))
 		
 		width = int(cap.get(3))
 		height = int(cap.get(4))
@@ -85,7 +85,7 @@ class Organizer(object):
 		frameCounter = 1
 		vidNum = 1
 		
-		out = cv2.VideoWriter(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PG_Target_SaveName"]+'%i.avi'%vidNum),FOURCC, fps, (width,height))
+		out = cv2.VideoWriter(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PG_Target_SaveName"]+'%i.avi'%vidNum),self.FOURCC, fps, (width,height))
 		f, img = cap.read()
 
 		while (True):
@@ -96,16 +96,17 @@ class Organizer(object):
 			if (frameCounter  == numFramesInMovie):
 				cap.release()
 				if not (movieCounter==numMoviesTotal):
-					movieCounter += 1
-					file = dir[movieCounter]
-					cap = cv2.VideoCapture(os.path.join(File_Saving_Dict["File_PG_Initial_Save_Location"],file))
+					
+					file = dir[movieCounter-1]
+					cap = cv2.VideoCapture(os.path.join(self.File_Saving_Dict["File_PG_Initial_Save_Location"],file))
 					numFramesInMovie += int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
+					movieCounter += 1
 				else:
 					break
 			if (frameCounter % self.File_Saving_Dict["Frames_In_Saved_Video"] == 0):
 				out.release()
 				vidNum +=1
-				out = cv2.VideoWriter(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PG_Target_SaveName"]+'%i.avi'%vidNum),FOURCC, fps, (width,height))
+				out = cv2.VideoWriter(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PG_Target_SaveName"]+'%i.avi'%vidNum),self.FOURCC, fps, (width,height))
 						
 			frameCounter += 1
 			
@@ -149,7 +150,7 @@ class Organizer(object):
 			camera2 = {"cap":cap2,"width":width2,"height":height2,"frames":frames_in_video2,"fps":fps2}
 			camera_list = (camera1,camera2)
                
-			out = cv2.VideoWriter(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],'Synchronized_Vid%i'%vidNum+'.avi'),FOURCC, fps, (Width,Height),0)			
+			out = cv2.VideoWriter(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],'Synchronized_Vid%i'%vidNum+'.avi'),self.FOURCC, fps, (Width,Height),0)			
 			image = np.ones((Height,Width))
 			
 			for n in range(framesTotal-2):
