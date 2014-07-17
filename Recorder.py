@@ -166,7 +166,8 @@ class Record(object):
 			text_file = open(self.File_Saving_Dict["File_Complete_Target_Location"]+"\Parameters.txt", "w")
 			for parameter in self.Imaging_Dict:
 				text_file.write(str(parameter) + ": " + str(self.Imaging_Dict[parameter]) +"\n")
-			text_file.write("Suspend Time: %d"%sleep_time)
+			text_file.write("Suspend Time: %d\n"%sleep_time)
+			text_file.write("Time Began: %i"%pytime.began("%c"))
 			text_file.close()
 			while self.cameraReady:
 				if not self.currentlyRecording:
@@ -229,7 +230,9 @@ class Record(object):
 		else:
 			print "Error in Auto Recording."
 			return None
-
+		text_file = open(self.File_Saving_Dict["File_Complete_Target_Location"]+"\Parameters.txt", "a")
+		text_file.write("Time Finished: %i"%pytime.began("%c"))
+		text_file.close()
 		cv2.destroyWindow(self.window)
 		cv2.destroyWindow(self.control)
 			
