@@ -45,6 +45,7 @@ class Record(object):
 		self.File_Saving_Dict = File_Saving_Dict
 		self.Constants_Dict = Constants_Dict
 	
+		self.Overlay_Index = extras.QUIT_OVERLAY(self.File_Saving_Dict["File_Target_Location_Root"])
 		self.videoNum = 1
 		self.fig = None
 		self.currentlyRecording = False
@@ -229,6 +230,9 @@ class Record(object):
 			print "Error in Auto Recording."
 			return None
 
+		cv2.destroyWindow(self.window)
+		cv2.destroyWindow(self.control)
+			
 	def update_windows(self, _):
 		for param in self.param_names:
 			self.params[param] = cv2.getTrackbarPos(param,self.control)
@@ -313,4 +317,5 @@ class Record(object):
 
 	def updatePS3Viewer(self, thisFrame):
 		cv2.polylines(thisFrame, [self.mask_pts], 1, (255,255,255), thickness=1)
+		thisFrame[self.Overlay_Index[0], self.Overlay_Index[1],:] = (36,28,237)
 		cv2.imshow(self.window, thisFrame)

@@ -22,24 +22,25 @@ def Menu_Loop(Imaging_Dict, File_Saving_Dict, Constants_Dict, Camera):
 		print "MENU: (Current Mouse: " + File_Saving_Dict["Mouse_Name"] +")"
 		print "  Enter 'Quit' to Quit"
 		print "  Enter 'Go' to manually start recording one video (unstable)"
-		print "  Enter 'View' to view saved videos"
+		#print "  Enter 'View' to view saved videos"
 		print "  Enter 'Sort' to move and rename all Point Grey files to the Data folder"
 		print "  Enter 'Record' to have the software automatically record mouse movement"
 		print "  Enter 'Analyze' to begin analyzing the data"
 		print "  Enter 'Sync' to begin synchronizing the videos"
 		print "  Enter 'Change' to select a different mouse"
+		print "  Enter 'View' to see from the Playstation 3 Camera without recording anything"
 		
 		input = extras.getUserInput("Input:")
 
 		if (input in saveCommandList):
 			savingProcess = Organizer(File_Saving_Dict)
-			savingProcess.getLocation()
-			savingProcess.getFrameCount()
-			savingProcess.saveFiles()
+			if savingProcess.getInfo():
+				if savingProcess.getSaveFrameCount():
+					savingProcess.saveFiles()
 			savingProcess = None
 			
 		elif (input in viewCommandList):
-			VideoSelect(name=savename)
+			extras.View(Camera,File_Saving_Dict["File_Target_Location_Root"])
 		
 		elif (input in quitCommandList):
 			break
@@ -55,10 +56,12 @@ def Menu_Loop(Imaging_Dict, File_Saving_Dict, Constants_Dict, Camera):
 			Recording = Record(Imaging_Dict, File_Saving_Dict, Constants_Dict, Camera)
 			Recording.autoRecord()
 			Recording = None
+			File_Saving_Dict["Trial_Number"] += 1
 			
 		elif (input in analyzeCommandList):
-			#Analysis = analyze(fileTargetLocationRoot=fileTargetLocationRoot,PS3_SaveName=PS3_SaveName, pgFileName = pgFileName)
-			#Analysis.menu()
+			Analysis = analyze(File_Saving_Dict)
+			if Analysis.getInfo():
+				Analysis.menu()
 			pass
 	  
 		elif (input in syncCommandList):

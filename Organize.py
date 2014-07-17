@@ -16,52 +16,25 @@ class Organizer(object):
 
 		print " " #Makes things look nicer
 			
-	def getLocation(self):
+	def getInfo(self):
 		
-		while True:
-			input = extras.getUserInput("Date (DDMMYYYY):")
-			input = int(input)
-			if input in self.quitList:
-				return None			
-			if type(input) == int:
-				self.File_Saving_Dict["Date"] = str(input)
-				checkLocation = os.path.join(self.File_Saving_Dict["File_Target_Location_Root"],self.File_Saving_Dict["Mouse_Name"],self.File_Saving_Dict["Date"])
-				if (os.path.isdir(checkLocation) == False):
-					print "Error: Could not find Trial folder for sorting"
-					return None
-				else:
-					break
-			else:
-				print "Please enter a valid numerical date in the form 'DDMMYYYY'"
+		date,trialNum =  updateInfo(self.File_Saving_Dict)
+		self.File_Saving_Dict["Date"] = date
+		self.File_Saving_Dict["Trial_Number"] = trialNum		
 		
-		while True:
-			input = extras.getUserInput("Trial Number:")
-			input = int(input)
-			if input in self.quitList:
-				return None				
-			if type(input) == int:
-				self.File_Saving_Dict["Trial_Number"] = input
-				checkLocation = os.path.join(self.File_Saving_Dict["File_Target_Location_Root"],self.File_Saving_Dict["Mouse_Name"],self.File_Saving_Dict["Date"], "Trial%i"%self.File_Saving_Dict["Trial_Number"])
-				if (os.path.isdir(checkLocation) == False):
-					print "Error: Could not find Trial folder for sorting"
-					return None
-				else:
-					self.File_Saving_Dict["File_Complete_Target_Location"] = os.path.join(self.File_Saving_Dict["File_Target_Location_Root"],self.File_Saving_Dict["Mouse_Name"],self.File_Saving_Dict["Date"], "Trial%i"%self.File_Saving_Dict["Trial_Number"])
-					break
-			else:
-				print "Please enter a valid number"
-
-	def getFrameCount(self):
-		
+	def getSaveFrameCount(self):
+	
 		while True:
 			input = extras.getUserInput("Frames per Video:")
 			if input in self.quitList:
-				return None				
+				return False				
 			try:
 				self.File_Saving_Dict["Frames_In_Saved_Video"] = int(input)
-				break
+				return True
 			except:
-				print "Please enter a valid number"
+				print "Please enter a valid response. Enter 'q' to quit."
+				
+		return False
 				
 	def saveFiles(self):
 		#Find all desired PG videos
@@ -121,6 +94,8 @@ class Organizer(object):
 		
 		for videoNum in enumerate(dir):
 			vidNum = videoNum[0] + 1
+			if not os.path.isfile(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PS3_Target_SaveName"]+'%i.avi'%vidNum)):
+				break
 			cap1 = cv2.VideoCapture(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PS3_Target_SaveName"]+'%i.avi'%vidNum))
 			cap2 = cv2.VideoCapture(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PG_Target_SaveName"]+'%i.avi'%vidNum))
 			width1 = int(cap1.get(3))
@@ -131,9 +106,9 @@ class Organizer(object):
 			frames_in_video2 = int(cap2.get(cv.CV_CAP_PROP_FRAME_COUNT))	
 			fps1 = int(cap1.get(cv.CV_CAP_PROP_FPS))
 			fps2 = int(cap2.get(cv.CV_CAP_PROP_FPS))
-			timeTotal = min(((frames_in_video1/fps1),(frames_in_video2/fps2)))				
+			timeTotal = min(((float(frames_in_video1)/float(fps1)),(float(frames_in_video2)/float(fps2))))				
 			fps = np.max((fps1,fps2))
-			framesTotal = timeTotal*fps
+			framesTotal = int(timeTotal*fps)
 			fps_ratio = (fps1/fps2)
 			slower_camera_index = 1 #Camera index is 0 or 1 where 0 is cap1 and 1 is cap2
 			if fps_ratio < 1:

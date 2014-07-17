@@ -9,43 +9,37 @@ import matplotlib.cm as mpl_cm
 from matplotlib import path as mpl_path
 
 class analyze(object):
-	def __init__(self, fileTargetLocationRoot = 'C:\Users\Camera\Desktop\GtHUb\Two-Cameras\\Data\Trial', PS3_SaveName = "PS3_Vid", pgFileName = 'PG_Vid'):
+	def __init__(self, File_Saving_Dict):
 		pass
-		
+
 		self.quitList = ['q', 'Q', 'quit', 'Quit']	 
 		self.yesList = ['y', 'Y', 'yes', 'YES', 'Yes']
 		self.noList = ['n', 'N', 'No', 'NO', 'no']
 		self.allList = ['a', 'A', 'All', 'all', 'ALL']
 		self.ps3List = ['ps3', 'Ps3', 'PS3', 'pS3', 'ps', 'Ps', 'pS', 'PS']
 		self.pgList = ['pg', 'Pg', 'pG', 'PG']		
-		
-		self.camera = Camera
-		self.fileTargetLocationRoot = fileTargetLocationRoot
-		self.PS3_Savename = PS3_SaveName
-		self.pgFileName = pgFileName
-		self.savename
+
+		self.File_Saving_Dict = File_Saving_Dict
 		self.VideoNum = 1
-		
+
 		#RMS Display Parameters
 		self.param_names = ['movement_std_threshold', 'wheel_translation','wheel_stretch']
 		self.params = {}
-		self.params['movement_std_threshold'] = movement_std_threshold
-		self.params['wheel_translation'] = 50
-		self.params['wheel_stretch'] = 200
-		
-		
+	
 	def maskedPlotRMS(self):
 	#Private Constants
 
 		analyze_video_type = None
-		video_type_dict = {1:self.PS3_SaveName, 2:self.pgFileName}
+		video_type_dict = {1:self.File_Saving_Dict["PS3_Target_SaveName"], 2:self.File_Saving_Dict["PG_Target_SaveName"]}
 		allVideos = False
-	
+
 		while True:
-			input = raw_input("Analyze Trial Number:")
-			input = input.rstrip()
-			input = int(input)
-			if (type(input) == int and os.path.isdir(self.fileTargetLocation,'Trial%i'%self.trialNum)):
+			input = extras.getUserInput("Analyze Trial Number:")
+			try:
+				input = int(input)
+			except:
+				pass
+			if (type(input) == int and os.path.isdir(self.File_Saving_Dict["File_Complete_Target_Location"],'Trial%i'%self.trialNum)):
 				self.trialNum = input
 				break
 			else:
@@ -55,7 +49,7 @@ class analyze(object):
 		print " "
 		print "Would you like to analyze PS3 Videos or Point Grey Videos?"
 		print "Enter either 'PS3' or 'PG'"
-		
+
 		while True:
 			input = extras.getUserInput("Type of Video:")
 			input = int(input)
@@ -71,11 +65,11 @@ class analyze(object):
 				break
 			else:
 				print "Please enter a valid response"
-				
+
 		print " "
 		print "Which video number would you like to image?"
 		print "If you would like to image them all, enter 'a'"
-		
+
 		while True:
 			input = extras.getUserInput("Input:")
 			input = int(input)
@@ -110,7 +104,7 @@ class analyze(object):
 				for cidx,pt in enumerate(row):
 					if path.contains_point([cidx, ridx]):
 						mask[ridx,cidx] = False
-			
+
 			self.mask_pts[m] = np.array(pts, dtype=np.int32)
 			self.masks[m] = mask
 			self.mask_idx[m] = np.where(mask==False)
@@ -122,7 +116,7 @@ class analyze(object):
 				else:
 					print "Please enter a valid name"
 			#np.save(os.path.join(self.fileTargetLocation,'Analysis_mask_'+self.mask_name[m]), np.atleast_1d([self.masks]))
-			
+
 			while True:
 				input = extras.getUserInput("Enter Another Mask? (Y/N):")
 				if input in self.yesList:
@@ -134,8 +128,8 @@ class analyze(object):
 					return None
 				else:
 					print "Please enter a valid response."
-					
-		
+
+
 		pl.ion()
 		self.fig = pl.figure()
 		self.ax = self.fig.add_subplot(111)
@@ -149,29 +143,29 @@ class analyze(object):
 				n = 1
 				while os.path.isfile(os.path.join(self.fileTargetLocationRoot+str(self.trialNum),self.savename + str(self.videoNum)+'.avi')):
 					n += 1
-			
+
 				for self.VideoNum in range(n):
 					self.std_dev_plot(os.path.join(self.fileTargetLocationRoot+str(self.trialNum), self.savename+str(self.videoNum)+'.avi'))
 		else:
 			self.std_dev_plot(os.path.join(self.fileTargetLocationRoot+str(self.trialNum), self.savename+str(self.videoNum)+'.avi'))
-				
+
 				# cap = cv2.VideoCapture(os.path.join(self.fileTargetLocationRoot+str(self.trialNum), self.savename+str(self.videoNum)+'.avi'))
 				# fourcc = cv2.cv.CV_FOURCC(*'XVID')
-				
+
 				# width = int(cap.get(3))
 				# height = int(cap.get(4))
 				# numFramesInMovie = int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
 				# fps = int(cap.get(cv.CV_CAP_PROP_FPS))
-				
-		
+
+
 		out = cv2.VideoWriter(os.path.join(self.fileTargetLocationRoot+'%i'%self.sortNum,self.pgFileName+vidNumStr+'.avi'),fourcc, fps, (width,height))
 		f, img = cap.read()
 		frameCounter = 1
 
 
-		
+
 		frames = self.camera.get(vc.VC_CAP_PROP_FRAME_COUNT)
-		
+
 		for counter in range(frames):
 			pass
 
@@ -191,7 +185,6 @@ class analyze(object):
 					break
 			else:
 				print "Please enter a valid number"
-				
+
 	def std_dev_plot(self, video_file):
 		pass
-				
