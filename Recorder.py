@@ -166,8 +166,8 @@ class Record(object):
 			text_file = open(self.File_Saving_Dict["File_Complete_Target_Location"]+"\Parameters.txt", "w")
 			for parameter in self.Imaging_Dict:
 				text_file.write(str(parameter) + ": " + str(self.Imaging_Dict[parameter]) +"\n")
-			text_file.write("Suspend Time: %d\n"%sleep_time)
-			text_file.write("Time Began: %i"%pytime.began("%c"))
+			text_file.write("Suspend Time: %d"%sleep_time+"\n")
+			text_file.write("Time Began: "+pytime.strftime("%c"))
 			text_file.close()
 			while self.cameraReady:
 				if not self.currentlyRecording:
@@ -195,6 +195,12 @@ class Record(object):
 						else:
 							self.updatePS3Viewer(thisFrame)
 							self.update_windows(self)
+			text_file = open(self.File_Saving_Dict["File_Complete_Target_Location"]+"\Parameters.txt", "a")
+			text_file.write("Time Finished: "+pytime.strftime("%c"))
+			text_file.close()		
+			cv2.destroyWindow(self.window)
+			cv2.destroyWindow(self.control)
+			pl.close(self.fig)
 			while True:
 				input = extras.getUserInput("Would you like to save these videos now? (Y/N):")
 				if input in self.yesList:
@@ -217,8 +223,9 @@ class Record(object):
 							print "Please do not destroy the process or turn off the machine."
 							self.savingProcess.syncFiles()
 							print "Synchronization Complete"
+							return None
 						elif input in self.noList:
-							break
+							return None
 						else:
 							print "Please enter a valid response"
 					break
@@ -230,11 +237,8 @@ class Record(object):
 		else:
 			print "Error in Auto Recording."
 			return None
-		text_file = open(self.File_Saving_Dict["File_Complete_Target_Location"]+"\Parameters.txt", "a")
-		text_file.write("Time Finished: %i"%pytime.began("%c"))
-		text_file.close()
-		cv2.destroyWindow(self.window)
-		cv2.destroyWindow(self.control)
+
+
 			
 	def update_windows(self, _):
 		for param in self.param_names:

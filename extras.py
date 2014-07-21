@@ -5,6 +5,7 @@ import time as pytime
 import numpy as np
 import os
 
+
 def getUserInput(display = ""):
 	input = raw_input(display)
 	input = input.rstrip()
@@ -45,38 +46,38 @@ def QUIT_OVERLAY(location):
 def updateInfo(File_Saving_Dict):
 	
 	quitList = ['n','N', 'No', 'NO', 'no']
-	
-	
+		
 	while True:
 		input = getUserInput("Date (DDMMYYYY):")
 		input = int(input)
 		if input in quitList:
-			return False			
+			return (None,None)			
 		if type(input) == int:
-			date = str(input)
-			checkLocation = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"])
+			date = input
+			checkLocation = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],str(date))
 			if (os.path.isdir(checkLocation) == False):
-				print "Error: Could not find Trial folder for sorting"
+				print "Error: Could not find any folders under that date"
+				return (None,None)
 			else:
 				break
 		else:
 			print "Please enter a valid numerical date in the form 'DDMMYYYY'"
 	
 	while True:
-		input = extras.getUserInput("Trial Number:")
+		input = getUserInput("Trial Number:")
 		input = int(input)
 		if input in quitList:
-			return False				
+			return (None,None)				
 		if type(input) == int:
 			trialNum = input
-			checkLocation = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"], "Trial%i"%File_Saving_Dict["Trial_Number"])
+			checkLocation = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],str(date), "Trial%i"%trialNum)
 			if (os.path.isdir(checkLocation) == False):
 				print "Error: Could not find Trial folder for sorting"
+				return (None, None)
 			else:
-				File_Saving_Dict["File_Complete_Target_Location"] = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"], "Trial%i"%File_Saving_Dict["Trial_Number"])
 				break
 		else:
 			print "Please enter a valid number"
 
-		return date,trialNum
+	return (str(date), trialNum)
 

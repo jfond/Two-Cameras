@@ -48,6 +48,7 @@ File_Saving_Dict = {}
 File_Saving_Dict["Date"] =  time.strftime("%d%m%Y")
 File_Saving_Dict["PS3_Target_SaveName"] = 'PS3_Vid'
 File_Saving_Dict["PG_Target_SaveName"] = 'PG_Vid'
+File_Saving_Dict["Synced_Target_SaveName"] = 'Synchronized_Vid'
 File_Saving_Dict["PG_Initial_SaveName"] = 'fc2_save'
 File_Saving_Dict["File_Target_Location_Root"] = 'C:\Users\Camera\Desktop\GtHUb\Two-Cameras\Data' #Used when I need flexibility in manipulating directories
 File_Saving_Dict["File_PG_Initial_Save_Location"] = "C:\\tmp"
@@ -66,11 +67,7 @@ while os.path.isdir(os.path.join(File_Saving_Dict["File_Target_Location_Root"],F
 File_Saving_Dict["Trial_Number"] = trialNum
 File_Saving_Dict["File_Complete_Target_Location"] = os.path.join(File_Saving_Dict["File_Target_Location_Root"],File_Saving_Dict["Mouse_Name"],File_Saving_Dict["Date"], "Trial%i"%File_Saving_Dict["Trial_Number"]) #Used when I want to be compact
 
-Camera = CamSetup(Imaging_Dict)
-
-
-Menu_Loop(Imaging_Dict, File_Saving_Dict, Constants_Dict, Camera)
+Menu_Loop(Imaging_Dict, File_Saving_Dict, Constants_Dict)
 	
-Camera.release()
 cv2.destroyAllWindows()						
 			

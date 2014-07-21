@@ -18,9 +18,14 @@ class Organizer(object):
 			
 	def getInfo(self):
 		
-		date,trialNum =  updateInfo(self.File_Saving_Dict)
-		self.File_Saving_Dict["Date"] = date
-		self.File_Saving_Dict["Trial_Number"] = trialNum		
+		date,trialNum =  extras.updateInfo(self.File_Saving_Dict)
+		if (date is None) and (trialNum is None):
+			return False
+		else:
+			self.File_Saving_Dict["Date"] = date
+			self.File_Saving_Dict["Trial_Number"] = trialNum
+			self.File_Saving_Dict["File_Complete_Target_Location"] = os.path.join(self.File_Saving_Dict["File_Target_Location_Root"],self.File_Saving_Dict["Mouse_Name"],self.File_Saving_Dict["Date"], "Trial%i"%self.File_Saving_Dict["Trial_Number"])
+			return True
 		
 	def getSaveFrameCount(self):
 	
@@ -60,7 +65,7 @@ class Organizer(object):
 		
 		out = cv2.VideoWriter(os.path.join(self.File_Saving_Dict["File_Complete_Target_Location"],self.File_Saving_Dict["PG_Target_SaveName"]+'%i.avi'%vidNum),self.FOURCC, fps, (width,height))
 		f, img = cap.read()
-
+	
 		while (True):
 			cv2.waitKey(1)
 			f, img = cap.read()
@@ -69,11 +74,11 @@ class Organizer(object):
 			if (frameCounter  == numFramesInMovie):
 				cap.release()
 				if not (movieCounter==numMoviesTotal):
-					
+					movieCounter += 1
 					file = dir[movieCounter-1]
 					cap = cv2.VideoCapture(os.path.join(self.File_Saving_Dict["File_PG_Initial_Save_Location"],file))
 					numFramesInMovie += int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
-					movieCounter += 1
+					
 				else:
 					break
 			if (frameCounter % self.File_Saving_Dict["Frames_In_Saved_Video"] == 0):
